@@ -1,0 +1,29 @@
+//@version=4
+study(title="ARI wrong gap finder", shorttitle="ARI WGAP", overlay=true)
+
+// clear_past = input(title="Clear filled gaps", type=input.bool, defval=true)
+bars = input(3, "Max bars")
+if bars <= 3
+    bars := 3
+perc = input(1, "Min gap % allowed")
+if perc <= 0
+    perc := 1
+
+// scenario one: bearish
+// a = low[2]
+a = lowest(low[2],bars-2)
+b = high
+delta_bear = (a-b)
+gap_bear = delta_bear/b > (perc/100) ? (a>b) : na
+
+if gap_bear 
+    bx = box.new(bar_index[bars-1], low[2], bar_index[0], high, color.green, 1, line.style_solid, extend.none, xloc.bar_index, color.new(color.green, 90))
+
+// scenario two: bullish
+a_bull = highest(high[2],bars-2)
+b_bull = low
+delta_bull = (b_bull-a_bull)
+gap_bull = delta_bull/a > (perc/100) ? (a<b) : na
+
+if gap_bull
+    bx = box.new(bar_index[bars-1], high[2], bar_index[0], low, color.purple, 1, line.style_solid, extend.none, xloc.bar_index, color.new(color.purple, 90))

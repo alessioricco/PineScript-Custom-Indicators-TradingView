@@ -1,0 +1,95 @@
+//@version=4
+study(title="Ari zScore", shorttitle="ARI-zScore", overlay=true)
+
+
+src = close
+periodFast = input(5, "Fast")
+periodSlow = input(20, "Slow")
+periodStDev = input(20, "St Dev")
+zscoreMin = input(1, "z first band")
+// zscoreMax = input(1.25, "z second band")
+showMAGraph = input(false, "Show Bands")
+showZScore = input(false, "Show zScore line")
+showZScoreCross = input(true, "Show zScore cross")
+showPSAR = input(false, "Show PSAR")
+maFast = sma(src, periodFast)
+maSlow = sma(src, periodSlow)
+std = stdev(src,periodStDev)
+
+zscore = (maFast-maSlow)/std
+// if periodFast < 2
+//     zscore := (src-maSlow)/std
+    
+// plot(zscore, color=color.green)
+start = (0.02)
+increment = (0.02)
+maximum = 0.2
+sar =sar(start, increment, maximum)
+plot(showPSAR ? sar : na, "ParabolicSAR", style=plot.style_cross, color=#2962FF)
+
+
+plotshape(-1.25<zscore and zscore<=-1,      style=shape.triangleup,location=location.belowbar, text="1", color=color.lime)
+plotshape(-1.5<zscore and zscore<=-(1.25),  style=shape.triangleup,location=location.belowbar, text="", color=color.green)
+plotshape(-1.75<zscore and zscore<=-(1.5),   style=shape.triangleup,location=location.belowbar, text="", color=color.olive)
+plotshape(-2<zscore and zscore<=-(1.75),  style=shape.triangleup,location=location.belowbar, text="", color=color.teal)
+plotshape(-3<zscore and zscore<=-2,         style=shape.triangleup,location=location.belowbar, text="2", color=color.teal)
+plotshape(zscore<=-3,                       style=shape.triangleup,location=location.belowbar, text="3", color=color.teal)
+
+// drawing when zScore = 0
+plotshape(showZScoreCross and crossover(zscore,0), style=shape.diamond, location=location.belowbar, color=color.yellow, text="0",textcolor=color.white)
+
+
+plotshape(1<=zscore and zscore<1.25,     style=shape.triangledown,location=location.abovebar, text="1", color=color.orange)
+plotshape(1.25<=zscore and zscore<1.5,  style=shape.triangledown,location=location.abovebar, text="", color=color.red)
+plotshape(1.5<=zscore and zscore<1.75,  style=shape.triangledown,location=location.abovebar, text="", color=color.purple)
+plotshape(1.75<=zscore and zscore<2,    style=shape.triangledown,location=location.abovebar, text="", color=color.maroon)
+plotshape(2<=zscore and zscore<3,       style=shape.triangledown,location=location.abovebar, text="2", color=color.maroon)
+plotshape(zscore>=3,                    style=shape.triangledown,location=location.abovebar, text="3", color=color.maroon)
+
+// plotshape(zscore<-zscoreMin, style=shape.triangleup,
+//                  location=location.belowbar, color=color.lime)
+// plotshape(zscore<-zscoreMax, style=shape.triangleup,
+//                  location=location.belowbar, color=color.teal)
+                 
+// drawing top and bottom zscores
+max_signalPos = highest(zscore, 20)[1] > zscore //and zscore > zscoreMax
+the_signalPos = max_signalPos != max_signalPos[1] and max_signalPos == true
+plotshape(the_signalPos, style=shape.square,
+                 location=location.belowbar, color=color.white, text="T",textcolor=color.red)
+                 
+min_signalPos = lowest(zscore, 20)[1] < zscore //and zscore < -zscoreMax
+the_signalNeg = min_signalPos != min_signalPos[1] and min_signalPos == true
+plotshape(the_signalNeg, style=shape.square,
+                 location=location.abovebar, color=color.white, text="B",textcolor=color.green)
+
+
+                 
+// drawing the band
+plotFast = plot(showMAGraph ? maFast : na, color=color.yellow)
+plotSlow = plot(showMAGraph ? maSlow : na, color=color.blue)
+plot(showZScore ? zscore : na, color=color.green)
+
+color = color.black
+if zscore>0
+    color := color.yellow
+    if zscore>1
+        color := color.orange
+    if zscore>2
+        color := color.red
+    if zscore>3
+        color := color.purple   
+    if zscore>4
+        color := color.fuchsia  
+if zscore<0
+    color := color.yellow
+    if zscore<-1
+        color := color.lime
+    if zscore<-2
+        color := color.green
+    if zscore<-3
+        color := color.olive
+    if zscore<-4
+        color := color.teal
+        
+
+fill(plot1=plotFast, plot2=plotSlow,color=color, transp=30, title="")

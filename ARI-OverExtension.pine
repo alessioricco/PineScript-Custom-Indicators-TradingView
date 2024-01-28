@@ -1,0 +1,16 @@
+//@version=4
+study(title=" ARI-Overextension", shorttitle="ARI-OXT", format=format.price, precision=2, resolution="")
+period_ = input(21, title="Period", minval=1)
+trendperiod_ = input(200, title="Trend Period", minval=7)
+
+hline(0, title="Zero Line", color = #C0C0C0)
+
+hma = hma(close, trendperiod_)
+ema = ema(close, trendperiod_)
+
+line = 100 * (close-hma)/close
+
+accumulate = line < 0
+sell = line > 20
+linecolor = sell ? #ff0000 : accumulate ? #00ff00 : #ff8000 
+plot(line, offset = 0, title="ema(DPO)", color= linecolor, linewidth=3)

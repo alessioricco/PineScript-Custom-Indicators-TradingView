@@ -1,0 +1,76 @@
+//@version=4
+study(title=" ARI-DPO 2.0", shorttitle="ARI-DT2", format=format.price, precision=2, resolution="")
+
+// Input parameters
+period_       = input(21, title="Period", minval=1)
+trendperiod_  = input(200, title="Trend Period", minval=7)
+rsilength     = input(14, title="RSI Length", minval=1)
+drawLines     = input(false, title="Draw Lines")
+drawIndicator = input(true, title="Draw Indicator")
+
+// Calculate DPO
+barsback = period_/2 + 1
+formula = close
+ma = sma(formula, period_)
+dpo = formula - ma[barsback]
+
+// Calculate HMA and EMA
+hma = hma(dpo, trendperiod_)
+ema = ema(dpo, trendperiod_)
+
+// Calculate RSI
+rsi = rsi(dpo, rsilength)
+rsiclose = rsi(close, rsilength)
+
+// Function to determine line color
+color_lines(line, fast, slow) => 
+    linecolor = color.white
+    if line > fast and fast > slow
+        linecolor := color.teal
+    if line > slow and slow > fast
+        linecolor := color.green
+    if fast > line and line > slow
+        linecolor := color.orange
+    if slow > line and line > fast
+        linecolor := color.yellow
+    if line < slow and slow < fast 
+        linecolor := color.red
+    if line < fast and fast < slow 
+        linecolor := color.purple
+    linecolor
+
+// Determine line color
+linecolor = color_lines(dpo, hma, ema)
+
+// Determine RSI color
+rsicolor = color.white
+rsifunc = rsiclose
+if rsifunc > 50
+    rsicolor := color.yellow
+if rsifunc > 60
+    rsicolor := color.orange
+if rsifunc > 70
+    rsicolor := color.red
+if rsifunc > 80
+    rsicolor := color.purple
+if rsifunc < 20
+    rsicolor := color.teal
+if rsifunc < 30
+    rsicolor := color.green
+if rsifunc < 40
+    rsicolor := color.lime 
+if rsifunc < 50
+    rsicolor := color.yellow
+
+// Plotting
+plot(drawIndicator ? line : na, offset = 0, title="ema(DPO)", color=linecolor, linewidth=3)
+plot(drawLines ? dpo : na, color=rsicolor, linewidth=2)
+plot(drawLines ? hma : na, color=color.blue, linewidth=1)
+plot(drawLines ? ema : na, color=color.red, linewidth=1) 
+
+plotchar(drawIndicator ? (linecolor != color.teal and linecolor[1] == color.teal) : na, na, char="⬇", location=location.top, color=color.purple, size=size.tiny, transp=0) 
+plotchar(drawIndicator ? (linecolor != color.teal and linecolor != color.green and linecolor[1] == color.green and linecolor[2] == color.green) : na, na, char="⬇", location=location.top, color=color.red, size=size.tiny, transp=0) 
+plotchar(drawIndicator ? (linecolor == color.green and linecolor[1] != color.green and linecolor[2] != color.green) : na, na, char="⬆", location=location.bottom, color=color.green, size=size.tiny, transp=0) 
+plotchar(drawIndicator ? (linecolor == color.teal and linecolor[1] != color.green and linecolor[1] != color.teal and linecolor[2] != color.teal) : na, na, char="⬆", location=location.bottom, color=color.teal, size=size.tiny, transp=0) 
+
+plotchar(drawLines ? 1 : na, na, char="|", location=location.bottom, color=linecolor, size=size.tiny, transp=0)
